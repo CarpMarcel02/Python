@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import colorchooser, ttk
+from tkinter import messagebox
 
 from PIL import Image, ImageTk
 
@@ -22,6 +23,9 @@ class MainFrame(tk.Tk):
         self.player_option_var = tk.IntVar(value=1)  # Default to player 1 being selected
 
         self.current_player = 0
+
+        self.result_label = tk.Label(self, text="", font=("Helvetica", 20))
+
 
         # Main Menu frame
         self.create_main_menu()
@@ -86,9 +90,7 @@ class MainFrame(tk.Tk):
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
         canvas.image = bg_image  # Keep a reference
 
-        # Temporary label for context
-        label = tk.Label(play_game_frame, text="Choose an option", font=("Helvetica", 24), bg='light blue')
-        label.pack(pady=50)
+
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
@@ -165,9 +167,7 @@ class MainFrame(tk.Tk):
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
         canvas.image = bg_image  # Keep a reference
 
-        # Temporary label for context
-        label = tk.Label(play_vs_computer_frame, text="Choose an option", font=("Helvetica", 24), bg='light blue')
-        label.pack(pady=50)
+
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
@@ -337,7 +337,7 @@ class MainFrame(tk.Tk):
                 color_player_1.cget('bg'), color_player_2.cget('bg'),
                 player1_entry.get(), player2_entry.get(),
                 int(row_select.get()), int(column_select.get()),
-                self.player_option_var.get()  # Pass the value of the option variable
+                self.player_option_var.get(), player1_entry.get(), player2_entry.get()  # Pass the value of the option variable
             )
         )
         play_button.image = button_image
@@ -348,10 +348,17 @@ class MainFrame(tk.Tk):
 
         return player_vs_player_frame
 
-    def start_game(self, player1_color, player2_color, player1_name, player2_name, rows, columns, player1_is_checked):
-        if "GameInterface" not in self.frames:
-            self.create_game_interface(player1_color, player2_color, player1_name, player2_name, rows, columns,
-                                       player1_is_checked)
+    def start_game(self, player1_color, player2_color, player1_name, player2_name, rows, columns, player1_is_checked,
+                   player1_entry, player2_entry):
+        self.wait = 0
+        # Always create a new game interface when starting a new game.
+        if "GameInterface" in self.frames:
+            self.frames["GameInterface"].destroy()
+            del self.frames["GameInterface"]  # Ensure the reference is deleted.
+
+        # Now, create a new game interface frame.
+        self.create_game_interface(player1_color, player2_color, player1_name, player2_name, rows, columns,
+                                   player1_is_checked, player1_entry, player2_entry)
 
         self.show_frame("GameInterface")
         if player1_is_checked == 1:
@@ -359,7 +366,75 @@ class MainFrame(tk.Tk):
         else:
             self.current_player = 2
 
-    def handle_button_click(self, row, col, player1_color, player2_color):
+    def create_game_interface(self, player1_color, player2_color, player1_name, player2_name, rows, columns,
+                              player1_is_checked, player1_entry, player2_entry):
+        game_interface_frame = tk.Frame(self)
+        self.frames["GameInterface"] = game_interface_frame
+        self.rows = rows
+        self.collumns = columns
+
+        print(f"{player1_color},{player2_color},{player1_name},{player2_name},{rows},{columns},{player1_is_checked},{player1_entry},{player2_entry}")
+
+        if columns < 11 and rows < 9:
+            button_width = 20  # Width in text units
+            button_height = 6  # Height in text units
+            total_button_width = button_width * columns
+            total_button_height = button_height * rows
+
+            padding_width = (self.screen_width // 2) - (total_button_width) - 60 * columns
+            padding_height = (self.screen_height // 2) - (total_button_height) - 40 * rows
+        else:
+            button_width = 15  # Width in text units
+            button_height = 5  # Height in text units
+            total_button_width = button_width * columns
+            total_button_height = button_height * rows
+            padding_width = (self.screen_width // 2) - (total_button_width) - 45 * columns
+            padding_height = (self.screen_height // 2) - (total_button_height) - 30 * rows
+
+        # print(f" asta este self.screen_width {self.screen_width}")
+        # print(f" asta este self.screen_height {self.screen_height}")
+        #
+        # print(f" asta este total_button_width {total_button_width}")
+        # print(f" asta este total_button_height {total_button_height}")
+        #
+        # print(f" asta este padding_width {padding_width}")
+        # print(f" asta este padding_height {padding_height}")
+
+        # Add padding frames to push the button grid to the center
+        top_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
+        top_padding.grid(row=0, columnspan=columns + 2)
+        left_padding = tk.Frame(game_interface_frame, width=padding_width)
+        left_padding.grid(row=1, column=0, rowspan=rows)
+
+        self.game_buttons = [[None for _ in range(columns)] for _ in range(rows)]
+
+        for i in range(rows):
+            for j in range(columns):
+                button = tk.Button(
+                    game_interface_frame,
+                    bg='white',
+                    width=button_width,
+                    height=button_height,
+                    command=lambda row=i, col=j: self.handle_button_click(row, col, player1_color, player2_color,
+                                                                          player1_entry, player2_entry)
+
+                )
+                # Place buttons in the grid with padding on top and left
+                button.grid(row=i + 1, column=j + 1)
+                button.bind('<Button-1>',
+                            lambda event, r=i, c=j: self.handle_button_click(r, c, player1_color, player2_color,
+                                                                             player1_entry, player2_entry))
+                self.game_buttons[i][j] = button
+
+        right_padding = tk.Frame(game_interface_frame, width=padding_width)
+        right_padding.grid(row=1, column=columns + 1, rowspan=rows)
+        bottom_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
+        bottom_padding.grid(row=rows + 1, columnspan=columns + 2)
+
+        game_interface_frame.pack(expand=True, fill='both')
+
+        return game_interface_frame
+    def handle_button_click(self, row, col, player1_color, player2_color,  player1_entry, player2_entry):
         if self.wait == 0:
             current_button = self.game_buttons[row][col]
             if player1_color == 'white':
@@ -375,23 +450,57 @@ class MainFrame(tk.Tk):
                     current_color = player2_color
                 self.game_buttons[row][col]['bg'] = 'white'
 
-                self.animate_button_change(row, col, row, current_color, player1_color, player2_color)
+                self.animate_button_change(row, col, row, current_color, player1_color, player2_color,  player1_entry, player2_entry)
 
-    def animate_button_change(self, row, col, initial_row, current_color, player1_color, player2_color, delay=100):
+    def animate_button_change(self, row, col, initial_row, current_color, player1_color, player2_color,  player1_entry, player2_entry, delay=100):
         if row >= self.rows or self.game_buttons[row][col]['bg'] != 'white':
-            # Stop the animation when we reach the bottom or a non-white button
             # print(f" ce pana mea  {row},{self.rows},{col} ")
             self.wait = 0
             self.switch_player_turn()
+            over = 0
             winner = self.player_has_won(player1_color, player2_color)
+            message = ""
             if winner == 1:
-                print("1 First player has won ")
+                over = 1
+                message = f"{player1_entry} has won!"  # Assuming player1_entry is a tk.Entry widget
             elif winner == 2:
-                print("1 Second player has won ")
+                over = 1
+                message = f"{player2_entry} has won!"  # Assuming player2_entry is a tk.Entry widget
             elif winner == 3:
-                print("Game is draw")
-            else:
-                print("Meciul nu s-a terminat")
+                over = 1
+                message = "Game is draw"
+            # else:
+            #     print("Meciul nu s-a terminat")
+            if over == 1:
+                button_image_path = r"E:\Python\4InARow\chatframe.png"
+                button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
+                back_button = tk.Button(
+                    self,
+                    text="Back to Play Menu",
+                    image=button_image,
+                    font=("Helvetica", 14),
+                    command=lambda: self.show_frame("PlayerVsPlayer"),
+                    compound="center",
+                    fg="black",
+                    borderwidth=0,
+                    highlightthickness=0
+                )
+                back_button.image = button_image
+                back_button.place(relx=0.5, rely=0.1, anchor="n")
+                back_button.lift()
+                self.result_label.config(text=message, fg="green", bg="white")
+                self.result_label.config(width=20, height=2)
+                print(message)
+                self.update_idletasks()  # Update the geometry of the window
+                self.result_label.lift()
+                self.update()
+                self.result_label.place(relx=0.5, rely=0, anchor="n")  # Place label at the top center of the window
+                for row_buttons in self.game_buttons:
+                    for button in row_buttons:
+                        button.config(state=tk.DISABLED)
+                        button.unbind('<Button-1>')
+
+                 # Adjust position as needed
 
             return
 
@@ -404,7 +513,7 @@ class MainFrame(tk.Tk):
         self.game_buttons[row][col]['bg'] = current_color
 
         self.after(delay, lambda: self.animate_button_change(row + 1, col, initial_row, current_color, player1_color,
-                                                             player2_color))
+                                                             player2_color,  player1_entry, player2_entry))
 
     def switch_player_turn(self):
         # Switch turns
@@ -471,73 +580,7 @@ class MainFrame(tk.Tk):
         else:
             return 0
 
-    def create_game_interface(self, player1_color, player2_color, player1_name, player2_name, rows, columns,
-                              player1_is_checked):
-        game_interface_frame = tk.Frame(self)
-        self.frames["GameInterface"] = game_interface_frame
-        self.rows = rows
-        self.collumns = columns
-        # Define the size of the buttons (adjust as necessary)
-        if columns < 11 and rows < 9:
-            button_width = 20  # Width in text units
-            button_height = 6  # Height in text units
-            total_button_width = button_width * columns
-            total_button_height = button_height * rows
 
-            padding_width = (self.screen_width // 2) - (total_button_width) - 60 * columns
-            padding_height = (self.screen_height // 2) - (total_button_height) - 40 * rows
-        else:
-            button_width = 15  # Width in text units
-            button_height = 5  # Height in text units
-            total_button_width = button_width * columns
-            total_button_height = button_height * rows
-            padding_width = (self.screen_width // 2) - (total_button_width) - 45 * columns
-            padding_height = (self.screen_height // 2) - (total_button_height) - 30 * rows
-
-        self.turn_indicator = tk.Label(game_interface_frame, text='Player 1', bg=player1_color, width=10)
-        self.turn_indicator.grid(row=0, columnspan=columns)
-
-        print(f" asta este self.screen_width {self.screen_width}")
-        print(f" asta este self.screen_height {self.screen_height}")
-
-        print(f" asta este total_button_width {total_button_width}")
-        print(f" asta este total_button_height {total_button_height}")
-
-        print(f" asta este padding_width {padding_width}")
-        print(f" asta este padding_height {padding_height}")
-
-        # Add padding frames to push the button grid to the center
-        top_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
-        top_padding.grid(row=0, columnspan=columns + 2)
-        left_padding = tk.Frame(game_interface_frame, width=padding_width)
-        left_padding.grid(row=1, column=0, rowspan=rows)
-
-        self.game_buttons = [[None for _ in range(columns)] for _ in range(rows)]
-
-        for i in range(rows):
-            for j in range(columns):
-                button = tk.Button(
-                    game_interface_frame,
-                    bg='white',
-                    width=button_width,
-                    height=button_height,
-                    command=lambda row=i, col=j: self.handle_button_click(row, col, player1_color, player2_color)
-
-                )
-                # Place buttons in the grid with padding on top and left
-                button.grid(row=i + 1, column=j + 1)
-                button.bind('<Button-1>',
-                            lambda event, r=i, c=j: self.handle_button_click(r, c, player1_color, player2_color))
-                self.game_buttons[i][j] = button
-
-        right_padding = tk.Frame(game_interface_frame, width=padding_width)
-        right_padding.grid(row=1, column=columns + 1, rowspan=rows)
-        bottom_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
-        bottom_padding.grid(row=rows + 1, columnspan=columns + 2)
-
-        game_interface_frame.pack(expand=True, fill='both')
-
-        return game_interface_frame
 
     def update_player_selection(self):
         player = 1 if self.player_option_var.get() == 1 else 2
