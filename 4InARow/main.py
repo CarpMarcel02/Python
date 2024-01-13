@@ -24,7 +24,7 @@ class MainFrame(tk.Tk):
         self.player_option_var = tk.IntVar(value=1)  # Default to player 1 being selected
 
         self.current_player = 0
-
+        self.bot_plays_first = 0
         self.result_label = tk.Label(self, text="", font=("Helvetica", 20))
 
         # Main Menu frame
@@ -347,7 +347,6 @@ class MainFrame(tk.Tk):
     def start_game(self, player1_color, player2_color, player1_name, player2_name, rows, columns, player1_is_checked,
                    player1_entry, player2_entry):
         self.wait = 0
-        # print(f"  da d ad ad da  {player1_entry}  {player2_entry} ")
         if player1_entry == "":
             player1_entry = "Player 1"
         if player2_entry == "":
@@ -361,14 +360,25 @@ class MainFrame(tk.Tk):
         self.create_game_interface(player1_color, player2_color, player1_name, player2_name, rows, columns,
                                    player1_is_checked, player1_entry, player2_entry)
 
+        # if player2_name == "Bot_Hard" or player2_name == "Bot_Medium" or player2_name == "Bot_Easy" :
+        #     self.current_player = 0
+        print("ciocolata Albastra")
+        print(player1_is_checked)
+
+
         self.show_frame("GameInterface")
         if player1_is_checked == 1:
             self.current_player = 1
         else:
-            self.current_player = 2
+            if player1_is_checked == 2 and player2_entry !="Bot_Easy" and player2_entry !="Bot_Medium" and player2_entry !="Bot_Hard":
+                self.current_player = 2
+            else:
+                self.current_player = 0
+                self.bot_plays_first = 1
+                self.animate_button_change(self.rows, 0, self.rows, player2_color, player1_color, player2_color,
+                                           player1_entry, player2_entry)
 
     def handle_button_click(self, row, col, player1_color, player2_color, player1_entry, player2_entry):
-        print(f"La inceput iteratiei a fost apasatt butonul {row} {col}  wait u ppuli{self.wait}")
         if self.wait == 0:
             #print("Aici ma blochez")
             current_button = self.game_buttons[row][col]
@@ -383,7 +393,7 @@ class MainFrame(tk.Tk):
             if current_button['bg'] == 'white':  # Check if the button hasn't been clicked
                 if self.current_player == 1:
                     current_color = player1_color
-                elif self.current_player == 2 :
+                else:
                     current_color = player2_color
                 #print("Aici ma blochez")
 
@@ -397,11 +407,12 @@ class MainFrame(tk.Tk):
 
     def animate_button_change(self, row, col, initial_row, current_color, player1_color, player2_color, player1_entry,
                               player2_entry, delay=100):
+        if  (row >= self.rows or self.game_buttons[row][col]['bg'] != 'white') or self.bot_plays_first == 1:  # cand a cazut culoarea pe ultima casuta
 
-        #print(row, self.rows, self.game_buttons[row][col]['bg'])
-        if row >= self.rows or self.game_buttons[row][col]['bg'] != 'white':  # cand a cazut culoarea pe ultima casuta
+
             self.wait = 0
-            self.switch_player_turn()
+            if self.bot_plays_first == 0:
+                self.switch_player_turn()
             over = 0
             winner = 0
             winner = self.player_has_won(player1_color, player2_color)
@@ -443,9 +454,13 @@ class MainFrame(tk.Tk):
                         button.config(state=tk.DISABLED)
                         button.unbind('<Button-1>')
 
-            if self.current_player == 2 and player2_entry == "Bot_Easy" and winner == 0:
-                    print(f"imi place facultatea {player2_entry}")
-                    print(self.current_player)
+            if (self.current_player == 2 and player2_entry == "Bot_Easy" and winner == 0) or self.bot_plays_first == 1 :
+                    if self.bot_plays_first == 1:
+                        self.bot_plays_first = 0
+                        self.handle_button_click(0, (self.collumns - 1) // 2, player1_color, player2_color,
+                                                 player1_entry,
+                                                 player2_entry)
+
                     random_number = random.randint(0, self.collumns - 1)
                     if self.game_buttons[0][random_number]['bg'] != "white":
                         random_number = random.randint(0, self.collumns - 1)
@@ -459,14 +474,12 @@ class MainFrame(tk.Tk):
                     current_color = player2_color
                     self.handle_button_click(0, random_number, player1_color, player2_color, player1_entry,
                                                player2_entry)
-            if self.current_player == 2 and player2_entry == "Bot_Medium" and winner == 0:
-                    print(f"imi place facultatea {player2_entry}")
-                    print(self.current_player)
-                    # print(f"da frate {i} {j} {self.rows} {self.collumns}")
-                    for i in range(self.rows):
-                        for j in range(self.collumns):
-                            print(self.game_buttons[i][j]['bg'], end=" ")
-                        print()
+            if (self.current_player == 2 and player2_entry == "Bot_Medium" and winner == 0) or self.bot_plays_first == 1:
+                    if self.bot_plays_first == 1:
+                        self.bot_plays_first = 0
+                        self.handle_button_click(0, (self.collumns - 1) // 2, player1_color, player2_color,
+                                                 player1_entry,
+                                                 player2_entry)
                     for i in range(self.rows):  # in caz de botul poate castiga
                         for j in range(self.collumns):
                             if i - 1 > -1:  # in caz de are situatie de win fix deasupra lui gen pe coloana
@@ -520,7 +533,7 @@ class MainFrame(tk.Tk):
                                     self.handle_button_click(0, j + 3, player1_color, player2_color,
                                                              player1_entry,
                                                              player2_entry)
-                            if i - 3 > -1 and j - 3 < self.collumns:  # in cazz de castiga pe diagonala principala
+                            if i - 3 > -1 and j - 3 > -1:  # in cazz de castiga pe diagonala principala
                                 if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j - 1][
                                     'bg'] == player2_color and self.game_buttons[i - 2][j - 2][
                                     'bg'] == player2_color and self.game_buttons[i - 3][j - 3]['bg'] == "white" and \
@@ -573,13 +586,25 @@ class MainFrame(tk.Tk):
                                     self.handle_button_click(0, j - 3, player1_color, player2_color,
                                                              player1_entry,
                                                              player2_entry)
+                            if i == self.rows - 1 and j - 3 > -1:  # in caz pe ultima linie la inamic ii lipseste o patratica mai exact a doua
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == "white" and self.game_buttons[i][j - 2]['bg'] == player1_color and self.game_buttons[i][j - 3]['bg'] == player1_color:
+                                    print("botul blocheaza punand pe a doua pozitie unde ii lipseste inamicului")
+                                    self.handle_button_click(0, j - 1, player1_color, player2_color, player1_entry,
+                                                             player2_entry)
+                            if i == self.rows - 1 and j - 3 > -1:  # in caz de pe fix ultima linie si lipseste penultima bucata pentru a face blbocaj
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == "white" and self.game_buttons[i][j - 3]['bg'] == player1_color:
+                                    print("botul blocheaza punand pe a treia pozitie unde ii lipseste inamicului")
+
+                                    self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
                             if i - 3 > -1 and j + 3 < self.collumns:  # in cazz de blocaj pe diagonala secundara
                                 if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and self.game_buttons[i - 3][j + 3]['bg'] == "white" and self.game_buttons[i - 2][j + 3]['bg'] != "white":
                                     print("botul blocheaza prin alegerea la diagonala secundara")
                                     self.handle_button_click(0, j + 3, player1_color, player2_color,
                                                              player1_entry,
                                                              player2_entry)
-                            if i - 3 > -1 and j - 3 < self.collumns:  # in cazz de blocaj pe diagonala principala
+                            if i - 3 > -1 and j - 3 > -1:  # in cazz de blocaj pe diagonala principala
                                 if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j - 1][
                                     'bg'] == player1_color and self.game_buttons[i - 2][j - 2][
                                     'bg'] == player1_color and self.game_buttons[i - 3][j - 3]['bg'] == "white" and \
@@ -638,15 +663,19 @@ class MainFrame(tk.Tk):
                         while self.game_buttons[0][random_number]['bg'] != "white":
                             random_number = random.randint(0, self.collumns - 1)
 
-                    print(random_number)
-                    print("mutarea a fost random sa moara copii lu cirian")
+
                     current_color = player2_color
                     self.handle_button_click(0, random_number, player1_color, player2_color, player1_entry,
                                              player2_entry)
-            if self.current_player == 2 and player2_entry == "Bot_Hard" and winner == 0:
+            if (self.current_player == 2 and player2_entry == "Bot_Hard" and winner == 0) or self.bot_plays_first == 1:
                 print("Bot_HARD")
+                if  self.bot_plays_first == 1:
+                    self.bot_plays_first = 0
+                    self.handle_button_click(0, (self.collumns - 1) // 2, player1_color, player2_color,
+                                             player1_entry,
+                                             player2_entry)
 
-                for i in range(self.rows): # in caz de botul poate castiga
+                for i in range(self.rows): # in caz de botul poate castiga punand pe ultima linie piesa
                     for j in range(self.collumns):
                         if  i - 1 > -1:  # in caz de are situatie de win fix deasupra lui gen pe coloana
                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j]['bg'] == player2_color and self.game_buttons[i - 2][j]['bg'] == player2_color and self.game_buttons[i - 3][j]['bg'] == "white":
@@ -666,13 +695,13 @@ class MainFrame(tk.Tk):
                                 self.handle_button_click(0, j + 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
-                        if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                        if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si  e ultima linie gen
                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and self.game_buttons[i][j - 3]['bg'] == "white":
                                 print("botul castiga prin alegerea la stanga dar  e si pee linia de jos")
                                 self.handle_button_click(0, j - 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
-                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si nu e ultima linie gen
                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and self.game_buttons[i][j - 3]['bg'] == "white" and self.game_buttons[i + 1][j - 3]['bg'] != "white":
                                 print("botul castiga prin alegerea la dreapta dar nu e linia de jos")
                                 self.handle_button_click(0, j - 3, player1_color, player2_color,
@@ -684,12 +713,105 @@ class MainFrame(tk.Tk):
                                 self.handle_button_click(0, j + 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
-                        if i - 3 > -1 and j - 3 < self.collumns: # in cazz de castiga pe diagonala principala
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de castiga pe diagonala principala
                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j-1]['bg'] == player2_color and self.game_buttons[i-2][j-2]['bg'] == player2_color and self.game_buttons[i-3][j-3]['bg'] == "white" and  self.game_buttons[i-2][j-3]['bg'] != "white":
                                 print("botul castiga prin alegerea la diagonala principala")
                                 self.handle_button_click(0, j - 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
+                for i in range(self.rows): # in caz de botul poate castiga daca ii lipseste o piesa pe a 3-a pozitie
+                    for j in range(self.collumns):
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen si doar a 3 treia piesa lipseste
+                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1]['bg'] == player2_color and self.game_buttons[i][j + 2]['bg'] == "white" and self.game_buttons[i][j + 3]['bg'] == player2_color and self.game_buttons[i + 1][j + 2]['bg'] != "white":
+                                print("botul castiga prin alegerea la dreapta dar nu e linia de jos fix dupa 2 patratteele")
+                                self.handle_button_click(0, j + 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == "white" and self.game_buttons[i][j - 3]['bg'] == player2_color and self.game_buttons[i + 1][j - 2]['bg'] != "white":
+                                print("botul castiga prin alegerea la dreapta dar nu e linia de jos fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de castiga pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j+1]['bg'] == player2_color and self.game_buttons[i-2][j+2]['bg'] == "white" and self.game_buttons[i-3][j+3]['bg'] == player2_color and  self.game_buttons[i-1][j+2]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala secundara fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de castiga pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j-1]['bg'] == player2_color and self.game_buttons[i-2][j-2]['bg'] == "white" and self.game_buttons[i-3][j-3]['bg'] == player2_color and  self.game_buttons[i-1][j-2]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala principala fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                for i in range(self.rows): # in caz de botul poate castiga daca ii lipseste o piesa pe a 2-a pozitie
+                    for j in range(self.collumns):
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen si doar a 3 treia piesa lipseste
+                             if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1]['bg'] == "white" and self.game_buttons[i][j + 2]['bg'] == player2_color and self.game_buttons[i][j + 3]['bg'] == player2_color and self.game_buttons[i + 1][j + 1]['bg'] != "white":
+                                print("botul castiga prin alegerea la dreapta cu o patratica dar nu e linia de jos")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == "white" and self.game_buttons[i][j - 2]['bg'] == player2_color and self.game_buttons[i][j - 3]['bg'] == player2_color and self.game_buttons[i + 1][j - 1]['bg'] != "white":
+                                print("botul castiga prin alegerea la stanga  cu o patratica dar nu e linia de jos")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de castiga pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j+1]['bg'] == "white" and self.game_buttons[i-2][j+2]['bg'] == player2_color and self.game_buttons[i-3][j+3]['bg'] == player2_color and  self.game_buttons[i][j+1]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala secundara fix urmatorea patratica")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de castiga pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j-1]['bg'] == "white" and self.game_buttons[i-2][j-2]['bg'] == player2_color and self.game_buttons[i-3][j-3]['bg'] == player2_color and  self.game_buttons[i][j-1]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala principala fix urmatorea patratica")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                for i in range(self.rows):  # in caz de botul poate castiga daca ii lipseste prima piesa dintr- diagonala
+                    for j in range(self.collumns):
+                        if i - 2 > -1 and j + 2 < self.collumns and i + 1 < self.rows and j - 1 > -1 and i + 1 != self.rows:  # diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player2_color  and self.game_buttons[i - 1][j + 1][
+                                'bg'] == player2_color and self.game_buttons[i - 2][j + 2]['bg'] == player2_color and \
+                                    self.game_buttons[i + 1][j - 1]['bg'] == "white" and \
+                                    self.game_buttons[i + 2][j - 1]['bg'] != "white":
+                                print(" puune prima bucata din diagonala secundara dar nu e primma bucata nu e pe prima linie")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 2 > -1 and j + 2 < self.collumns and i + 1 < self.rows and j - 1 > -1 and i + 1 == self.rows:  # diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j + 1][
+                                'bg'] == player2_color and self.game_buttons[i - 2][j + 2]['bg'] == player2_color and \
+                                    self.game_buttons[i + 1][j - 1]['bg'] == "white":
+                                print(
+                                    " puune prima bucata din diagonala secundara dar nu e primma bucata este pe prima linie")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 2 > -1 and j - 2 > -1 and i + 1 < self.rows and j + 1 < self.collumns and i + 1 == self.rows:  ## diagoanala principala si singuru care lipseste e pe ultima linie
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j - 1][
+                                'bg'] == player2_color and self.game_buttons[i - 2][j - 2]['bg'] == player2_color and \
+                                    self.game_buttons[i + 1][j + 1]['bg'] == "white":
+                                print(
+                                    " puune prima bucata din diagonala principala si primma bucata este pe prima linie gen")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 2 > -1 and j - 2 > -1 and i + 1 < self.rows and j + 1 < self.collumns and i + 1 != self.rows:  ## diagoanala principala si singuru care lipseste e pe ultima linie
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j - 1][
+                                'bg'] == player2_color and self.game_buttons[i - 2][j - 2]['bg'] == player2_color and \
+                                    self.game_buttons[i + 1][j + 1]['bg'] == "white" and \
+                                    self.game_buttons[i + 2][j + 1]['bg'] != "white":
+                                print(
+                                    " puune prima bucata din diagonala principala si primma bucata este pe prima linie gen")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+
                 for i in range(self.rows): # in caz de botul poate bloca inamicul sa castigee
                     for j in range(self.collumns):
                         if  i - 1 > -1:  # in caz de poate bloca inamicu de a pune 4 pe o coloana
@@ -723,29 +845,111 @@ class MainFrame(tk.Tk):
                                                          player1_entry,
                                                          player2_entry)
                         if i - 3 > -1 and j + 3 < self.collumns: # in cazz de blocaj pe diagonala secundara
-                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and \self.game_buttons[i - 3][j + 3]['bg'] == "white" and \self.game_buttons[i - 2][j + 3]['bg'] != "white":
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and self.game_buttons[i - 3][j + 3]['bg'] == "white" and self.game_buttons[i - 2][j + 3]['bg'] != "white":
                                 print("botul blocheaza prin alegerea la diagonala secundara")
                                 self.handle_button_click(0, j + 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
-                        if i - 3 > -1 and j - 3 < self.collumns: # in cazz de blocaj pe diagonala principala
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de blocaj pe diagonala principala
                             if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j-1]['bg'] == player1_color and self.game_buttons[i-2][j-2]['bg'] == player1_color and self.game_buttons[i-3][j-3]['bg'] == "white" and  self.game_buttons[i-2][j-3]['bg'] != "white":
                                 print("botul blocheaza prin alegerea la diagonala principala")
                                 self.handle_button_click(0, j - 3, player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
+                for i in range(self.rows): # in caz de botul poate bloca daca inamicului ii lipseste o piesa doar de pe a 3-a pozitie, nu ultima
+                    for j in range(self.collumns):
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen si doar a 3 treia piesa lipseste
+                             if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1]['bg'] == player1_color and self.game_buttons[i][j + 2]['bg'] == "white" and self.game_buttons[i][j + 3]['bg'] == player1_color and self.game_buttons[i + 1][j + 2]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos fix dupa 2 patratteele")
+                                self.handle_button_click(0, j + 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == "white" and self.game_buttons[i][j - 3]['bg'] == player1_color and self.game_buttons[i + 1][j - 2]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j - 3 > -1: # in caz de pe fix ultima linie si lipseste 1 bucata si trebuie sa blocheze
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == "white" and self.game_buttons[i][j - 3]['bg'] == player1_color :
+                                self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de castiga pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j+1]['bg'] == player1_color and self.game_buttons[i-2][j+2]['bg'] == "white" and self.game_buttons[i-3][j+3]['bg'] == player1_color and  self.game_buttons[i-1][j+2]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la diagonala secundara fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 2, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de castiga pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j-1]['bg'] == player1_color and self.game_buttons[i-2][j-2]['bg'] == "white" and self.game_buttons[i-3][j-3]['bg'] == player1_color and  self.game_buttons[i-1][j-2]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la diagonala principala fix dupa 2 patratteele")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
 
-
-
-
-
+                for i in range(self.rows): # in caz de botul poate bloca inamicul daca ii lipseste o piesa de pe a doua pozitie
+                    for j in range(self.collumns):
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen si doar a 3 treia piesa lipseste
+                             if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1]['bg'] == "white" and self.game_buttons[i][j + 2]['bg'] == player1_color and self.game_buttons[i][j + 3]['bg'] == player1_color and self.game_buttons[i + 1][j + 1]['bg'] != "white":
+                                print("botul bloecheaza prin alegerea la dreapta cu o patratica dar nu e linia de jos")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe stanga si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == "white" and self.game_buttons[i][j - 2]['bg'] == player1_color and self.game_buttons[i][j - 3]['bg'] == player1_color and self.game_buttons[i + 1][j - 1]['bg'] != "white":
+                                print("botul bloecheaza prin alegerea la stanga  cu o patratica dar nu e linia de jos")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j - 3 > -1: # in caz pe ultima linie la inamic ii lipseste o patratica mai exact a doua
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == "white" and self.game_buttons[i][j - 2]['bg'] == player1_color and self.game_buttons[i][j - 3]['bg'] == player1_color :
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de castiga pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j+1]['bg'] == "white" and self.game_buttons[i-2][j+2]['bg'] == player1_color and self.game_buttons[i-3][j+3]['bg'] == player1_color and  self.game_buttons[i][j+1]['bg'] != "white":
+                                print("botul bloecheaza prin alegerea la diagonala secundara fix urmatorea patratica")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 > -1: # in cazz de castiga pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j-1]['bg'] == "white" and self.game_buttons[i-2][j-2]['bg'] == player1_color and self.game_buttons[i-3][j-3]['bg'] == player1_color and  self.game_buttons[i][j-1]['bg'] != "white":
+                                print("botul bloecheaza prin alegerea la diagonala principala fix urmatorea patratica")
+                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                for i in range(self.rows):  # in caz de botul poate bloca daca inamicului ii lipseste prima piesa dintr- diagonala
+                    for j in range(self.collumns):
+                        if i - 2 > -1 and j + 2 < self.collumns and i + 2 < self.rows and j - 1 > -1 and i+2 !=self.rows: # diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and self.game_buttons[i + 1][j - 1]['bg'] == "white" and self.game_buttons[i + 2][j - 1]['bg'] != "white":
+                                    print(" puune prima bucata din diagonala secundara dar nu e primma bucata nu e pe prima linie")
+                                    self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                        if i - 2 > -1 and j + 2 < self.collumns and i + 1 < self.rows and j - 1 > -1 and i+1 ==self.rows: # diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and self.game_buttons[i + 1][j - 1]['bg'] == "white" :
+                                    print(" puune prima bucata din diagonala secundara dar nu e primma bucata este pe prima linie")
+                                    self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                        if i - 2 > -1 and j - 2 > -1 and i + 1 < self.rows and j + 1 < self.collumns and i+1 == self.rows:## diagoanala principala si singuru care lipseste e pe ultima linie
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j - 1]['bg'] == player1_color and self.game_buttons[i - 2][j - 2]['bg'] == player1_color and self.game_buttons[i + 1][j + 1]['bg'] == "white" :
+                                print(" puune prima bucata din diagonala principala si primma bucata este pe prima linie gen")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 2 > -1 and j - 2 > -1 and i + 1 < self.rows and j + 1 < self.collumns and i+1 != self.rows:## diagoanala principala si singuru care lipseste e pe ultima linie
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j - 1]['bg'] == player1_color and self.game_buttons[i - 2][j - 2]['bg'] == player1_color and self.game_buttons[i + 1][j + 1]['bg'] == "white" and  self.game_buttons[i + 2][j + 1]['bg'] != "white":
+                                print(" puune prima bucata din diagonala principala si primma bucata este pe prima linie gen")
+                                self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                print("2222222222222222222222")
 
                 gasit = 0
-                for i in range(self.rows):  # cazu daca are unde sa l fure pe inamic sa nu castige
-                    for j in range(self.collumns):
-                        print(self.game_buttons[i][j]['bg'], end=" ")
-                    print()
-                for i in range(self.rows):  # cazu daca are unde sa l fure pe inamic sa nu castige
+
+                for i in range(self.rows):
                     for j in range(self.collumns):
                         if self.game_buttons[i][j]['bg'] == player2_color:
                             gasit = 1
@@ -761,7 +965,6 @@ class MainFrame(tk.Tk):
                     for j in range(self.collumns):
                         if self.game_buttons[i][j]['bg'] == player2_color:
                             if j + 1 < self.collumns and self.game_buttons[i][j+1]['bg'] == "white":#in caz ca are piesa o continua pe dreapta
-                                print(f"intru aici pe calea ferata dreapta {i}{j}")
                                 self.handle_button_click(0, j + 1 , player1_color, player2_color,
                                                          player1_entry,
                                                          player2_entry)
@@ -776,11 +979,16 @@ class MainFrame(tk.Tk):
                                     self.handle_button_click(0, j-1, player1_color, player2_color,
                                                              player1_entry,
                                                              player2_entry)
-
-
-
-
-
+                                elif j + 1 < self.collumns and self.game_buttons[i][j+1]['bg'] != "white":
+                                    print(f"pun piesa sus dreeapta la inceput la botulet {i}{j}")
+                                    self.handle_button_click(0, j + 1, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                                elif j - 1 > -1 and self.game_buttons[i][j-1]['bg'] != "white":
+                                    print(f"pun piesa sus stanga la inceput la botulet {i}{j}")
+                                    self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
 
             return
         self.wait = 1
@@ -859,7 +1067,6 @@ class MainFrame(tk.Tk):
         self.rows = rows
         self.collumns = columns
 
-        # print(f"{player1_color},{player2_color},{player1_name},{player2_name},{rows},{columns},{player1_is_checked},{player1_entry},{player2_entry}")
 
         if columns < 11 and rows < 9:
             button_width = 20  # Width in text units
@@ -920,7 +1127,7 @@ class MainFrame(tk.Tk):
         self.frames["PlayerVsHardBot"] = player_vs_hardbot
 
         bg_image_path = r"E:\Python\4InARow\player_vs_bot.png"
-        # Simplify the background to a solid color for visibility checking
+
         bg_image = ImageTk.PhotoImage(Image.open(bg_image_path).resize((self.screen_width, self.screen_height)))
 
         canvas = tk.Canvas(player_vs_hardbot, width=self.screen_width, height=self.screen_height)
@@ -960,8 +1167,6 @@ class MainFrame(tk.Tk):
         player1_entry = tk.Entry(player_vs_hardbot)
         player1_entry_window = canvas.create_window(866, 287, window=player1_entry)
 
-        # player2_entry = tk.Entry(player_vs_easyAI)
-        # player2_entry_window = canvas.create_window(1166, 287, window=player2_entry)
 
         self.player1_radiobutton = ttk.Radiobutton(
             player_vs_hardbot,
