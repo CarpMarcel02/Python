@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import colorchooser, ttk
 from tkinter import messagebox
+import random
 
 from PIL import Image, ImageTk
 
@@ -25,7 +26,6 @@ class MainFrame(tk.Tk):
         self.current_player = 0
 
         self.result_label = tk.Label(self, text="", font=("Helvetica", 20))
-
 
         # Main Menu frame
         self.create_main_menu()
@@ -89,8 +89,6 @@ class MainFrame(tk.Tk):
         canvas.pack(fill="both", expand=True)
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
         canvas.image = bg_image  # Keep a reference
-
-
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
@@ -166,8 +164,6 @@ class MainFrame(tk.Tk):
         canvas.pack(fill="both", expand=True)
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
         canvas.image = bg_image  # Keep a reference
-
-
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
@@ -337,7 +333,7 @@ class MainFrame(tk.Tk):
                 color_player_1.cget('bg'), color_player_2.cget('bg'),
                 player1_entry.get(), player2_entry.get(),
                 int(row_select.get()), int(column_select.get()),
-                self.player_option_var.get(), player1_entry.get(), player2_entry.get()  # Pass the value of the option variable
+                self.player_option_var.get(), player1_entry.get(), player2_entry.get()
             )
         )
         play_button.image = button_image
@@ -351,6 +347,11 @@ class MainFrame(tk.Tk):
     def start_game(self, player1_color, player2_color, player1_name, player2_name, rows, columns, player1_is_checked,
                    player1_entry, player2_entry):
         self.wait = 0
+        # print(f"  da d ad ad da  {player1_entry}  {player2_entry} ")
+        if player1_entry == "":
+            player1_entry = "Player 1"
+        if player2_entry == "":
+            player2_entry = "Player 2"
         # Always create a new game interface when starting a new game.
         if "GameInterface" in self.frames:
             self.frames["GameInterface"].destroy()
@@ -366,98 +367,43 @@ class MainFrame(tk.Tk):
         else:
             self.current_player = 2
 
-    def create_game_interface(self, player1_color, player2_color, player1_name, player2_name, rows, columns,
-                              player1_is_checked, player1_entry, player2_entry):
-        game_interface_frame = tk.Frame(self)
-        self.frames["GameInterface"] = game_interface_frame
-        self.rows = rows
-        self.collumns = columns
-
-        print(f"{player1_color},{player2_color},{player1_name},{player2_name},{rows},{columns},{player1_is_checked},{player1_entry},{player2_entry}")
-
-        if columns < 11 and rows < 9:
-            button_width = 20  # Width in text units
-            button_height = 6  # Height in text units
-            total_button_width = button_width * columns
-            total_button_height = button_height * rows
-
-            padding_width = (self.screen_width // 2) - (total_button_width) - 60 * columns
-            padding_height = (self.screen_height // 2) - (total_button_height) - 40 * rows
-        else:
-            button_width = 15  # Width in text units
-            button_height = 5  # Height in text units
-            total_button_width = button_width * columns
-            total_button_height = button_height * rows
-            padding_width = (self.screen_width // 2) - (total_button_width) - 45 * columns
-            padding_height = (self.screen_height // 2) - (total_button_height) - 30 * rows
-
-        # print(f" asta este self.screen_width {self.screen_width}")
-        # print(f" asta este self.screen_height {self.screen_height}")
-        #
-        # print(f" asta este total_button_width {total_button_width}")
-        # print(f" asta este total_button_height {total_button_height}")
-        #
-        # print(f" asta este padding_width {padding_width}")
-        # print(f" asta este padding_height {padding_height}")
-
-        # Add padding frames to push the button grid to the center
-        top_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
-        top_padding.grid(row=0, columnspan=columns + 2)
-        left_padding = tk.Frame(game_interface_frame, width=padding_width)
-        left_padding.grid(row=1, column=0, rowspan=rows)
-
-        self.game_buttons = [[None for _ in range(columns)] for _ in range(rows)]
-
-        for i in range(rows):
-            for j in range(columns):
-                button = tk.Button(
-                    game_interface_frame,
-                    bg='white',
-                    width=button_width,
-                    height=button_height,
-                    command=lambda row=i, col=j: self.handle_button_click(row, col, player1_color, player2_color,
-                                                                          player1_entry, player2_entry)
-
-                )
-                # Place buttons in the grid with padding on top and left
-                button.grid(row=i + 1, column=j + 1)
-                button.bind('<Button-1>',
-                            lambda event, r=i, c=j: self.handle_button_click(r, c, player1_color, player2_color,
-                                                                             player1_entry, player2_entry))
-                self.game_buttons[i][j] = button
-
-        right_padding = tk.Frame(game_interface_frame, width=padding_width)
-        right_padding.grid(row=1, column=columns + 1, rowspan=rows)
-        bottom_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
-        bottom_padding.grid(row=rows + 1, columnspan=columns + 2)
-
-        game_interface_frame.pack(expand=True, fill='both')
-
-        return game_interface_frame
-    def handle_button_click(self, row, col, player1_color, player2_color,  player1_entry, player2_entry):
+    def handle_button_click(self, row, col, player1_color, player2_color, player1_entry, player2_entry):
+        print(f"La inceput iteratiei a fost apasatt butonul {row} {col}  wait u ppuli{self.wait}")
         if self.wait == 0:
+            #print("Aici ma blochez")
             current_button = self.game_buttons[row][col]
             if player1_color == 'white':
                 player1_color = 'yellow'
             if player2_color == 'white':
                 player2_color = 'red'
+            #print("Aici ma blochez")
+
             copy_row = row
             copy_collumn = col
             if current_button['bg'] == 'white':  # Check if the button hasn't been clicked
                 if self.current_player == 1:
                     current_color = player1_color
-                else:
+                elif self.current_player == 2 :
                     current_color = player2_color
+                #print("Aici ma blochez")
+
                 self.game_buttons[row][col]['bg'] = 'white'
 
-                self.animate_button_change(row, col, row, current_color, player1_color, player2_color,  player1_entry, player2_entry)
 
-    def animate_button_change(self, row, col, initial_row, current_color, player1_color, player2_color,  player1_entry, player2_entry, delay=100):
-        if row >= self.rows or self.game_buttons[row][col]['bg'] != 'white':
-            # print(f" ce pana mea  {row},{self.rows},{col} ")
+                print(f"apelez functia cu {row}{col}")
+
+                self.animate_button_change(row, col, row, current_color, player1_color, player2_color, player1_entry,
+                                           player2_entry)
+
+    def animate_button_change(self, row, col, initial_row, current_color, player1_color, player2_color, player1_entry,
+                              player2_entry, delay=100):
+
+        #print(row, self.rows, self.game_buttons[row][col]['bg'])
+        if row >= self.rows or self.game_buttons[row][col]['bg'] != 'white':  # cand a cazut culoarea pe ultima casuta
             self.wait = 0
             self.switch_player_turn()
             over = 0
+            winner = 0
             winner = self.player_has_won(player1_color, player2_color)
             message = ""
             if winner == 1:
@@ -469,8 +415,6 @@ class MainFrame(tk.Tk):
             elif winner == 3:
                 over = 1
                 message = "Game is draw"
-            # else:
-            #     print("Meciul nu s-a terminat")
             if over == 1:
                 button_image_path = r"E:\Python\4InARow\chatframe.png"
                 button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
@@ -479,7 +423,7 @@ class MainFrame(tk.Tk):
                     text="Back to Play Menu",
                     image=button_image,
                     font=("Helvetica", 14),
-                    command=lambda: self.show_frame("PlayerVsPlayer"),
+                    command=lambda: self.show_frame("PlayGame"),
                     compound="center",
                     fg="black",
                     borderwidth=0,
@@ -490,7 +434,6 @@ class MainFrame(tk.Tk):
                 back_button.lift()
                 self.result_label.config(text=message, fg="green", bg="white")
                 self.result_label.config(width=20, height=2)
-                print(message)
                 self.update_idletasks()  # Update the geometry of the window
                 self.result_label.lift()
                 self.update()
@@ -500,10 +443,346 @@ class MainFrame(tk.Tk):
                         button.config(state=tk.DISABLED)
                         button.unbind('<Button-1>')
 
-                 # Adjust position as needed
+            if self.current_player == 2 and player2_entry == "Bot_Easy" and winner == 0:
+                    print(f"imi place facultatea {player2_entry}")
+                    print(self.current_player)
+                    random_number = random.randint(0, self.collumns - 1)
+                    if self.game_buttons[0][random_number]['bg'] != "white":
+                        random_number = random.randint(0, self.collumns - 1)
+                        print("am fost aici icsde")
+
+                        while self.game_buttons[0][random_number]['bg'] != "white":
+                            print("am fost aici xD")
+                            random_number = random.randint(0, self.collumns - 1)
+
+                    print(random_number)
+                    current_color = player2_color
+                    self.handle_button_click(0, random_number, player1_color, player2_color, player1_entry,
+                                               player2_entry)
+            if self.current_player == 2 and player2_entry == "Bot_Medium" and winner == 0:
+                    print(f"imi place facultatea {player2_entry}")
+                    print(self.current_player)
+                    # print(f"da frate {i} {j} {self.rows} {self.collumns}")
+                    for i in range(self.rows):
+                        for j in range(self.collumns):
+                            print(self.game_buttons[i][j]['bg'], end=" ")
+                        print()
+                    for i in range(self.rows):  # in caz de botul poate castiga
+                        for j in range(self.collumns):
+                            if i - 1 > -1:  # in caz de are situatie de win fix deasupra lui gen pe coloana
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j][
+                                    'bg'] == player2_color and self.game_buttons[i - 2][j]['bg'] == player2_color and \
+                                        self.game_buttons[i - 3][j]['bg'] == "white":
+                                    print("botul castiga prin alegerea de a plasa deasupra pe coloana")
+                                    self.handle_button_click(0, j, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i == self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1][
+                                    'bg'] == player2_color and self.game_buttons[i][j + 2]['bg'] == player2_color and \
+                                        self.game_buttons[i][j + 3]['bg'] == "white":
+                                    print("botul castiga prin alegerea la dreapta pe linia cea mai dejos")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1][
+                                    'bg'] == player2_color and self.game_buttons[i][j + 2]['bg'] == player2_color and \
+                                        self.game_buttons[i][j + 3]['bg'] == "white" and \
+                                        self.game_buttons[i + 1][j + 3]['bg'] != "white":
+                                    print("botul castiga prin alegerea la dreapta dar nu e linia de jos")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1][
+                                    'bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and \
+                                        self.game_buttons[i][j - 3]['bg'] == "white":
+                                    print("botul castiga prin alegerea la stanga dar  e si pee linia de jos")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1][
+                                    'bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and \
+                                        self.game_buttons[i][j - 3]['bg'] == "white" and \
+                                        self.game_buttons[i + 1][j - 3]['bg'] != "white":
+                                    print("botul castiga prin alegerea la dreapta dar nu e linia de jos")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i - 3 > -1 and j + 3 < self.collumns:  # in cazz de castiga pe diagonala secundara
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j + 1][
+                                    'bg'] == player2_color and self.game_buttons[i - 2][j + 2][
+                                    'bg'] == player2_color and self.game_buttons[i - 3][j + 3]['bg'] == "white" and \
+                                        self.game_buttons[i - 1][j + 2]['bg'] != "white":
+                                    print("botul castiga prin alegerea la diagonala secundara")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i - 3 > -1 and j - 3 < self.collumns:  # in cazz de castiga pe diagonala principala
+                                if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j - 1][
+                                    'bg'] == player2_color and self.game_buttons[i - 2][j - 2][
+                                    'bg'] == player2_color and self.game_buttons[i - 3][j - 3]['bg'] == "white" and \
+                                        self.game_buttons[i - 2][j - 3]['bg'] != "white":
+                                    print("botul castiga prin alegerea la diagonala principala")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                    for i in range(self.rows):  # in caz de botul poate bloca inamicul sa castigee
+                        for j in range(self.collumns):
+                            if i - 1 > -1:  # in caz de poate bloca inamicu de a pune 4 pe o coloana
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j][
+                                    'bg'] == player1_color and self.game_buttons[i - 2][j]['bg'] == player1_color and \
+                                        self.game_buttons[i - 3][j]['bg'] == "white":
+                                    print("botul blocheaza prin alegerea de a plasa deasupra pe coloana")
+                                    self.handle_button_click(0, j, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i == self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de blocaj pe dreapta si e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1][
+                                    'bg'] == player1_color and self.game_buttons[i][j + 2]['bg'] == player1_color and \
+                                        self.game_buttons[i][j + 3]['bg'] == "white":
+                                    print("botul blocheaza prin alegerea la dreapta pe linia cea mai dejos")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1][
+                                    'bg'] == player1_color and self.game_buttons[i][j + 2]['bg'] == player1_color and \
+                                        self.game_buttons[i][j + 3]['bg'] == "white" and \
+                                        self.game_buttons[i + 1][j + 3]['bg'] != "white":
+                                    print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1][
+                                    'bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == player1_color and \
+                                        self.game_buttons[i][j - 3]['bg'] == "white":
+                                    print("botul blocheaza prin alegerea la stanga dar  e si pee linia de jos")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1][
+                                    'bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == player1_color and \
+                                        self.game_buttons[i][j - 3]['bg'] == "white" and \
+                                        self.game_buttons[i + 1][j - 3]['bg'] != "white":
+                                    print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i - 3 > -1 and j + 3 < self.collumns:  # in cazz de blocaj pe diagonala secundara
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and self.game_buttons[i - 3][j + 3]['bg'] == "white" and self.game_buttons[i - 2][j + 3]['bg'] != "white":
+                                    print("botul blocheaza prin alegerea la diagonala secundara")
+                                    self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                            if i - 3 > -1 and j - 3 < self.collumns:  # in cazz de blocaj pe diagonala principala
+                                if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j - 1][
+                                    'bg'] == player1_color and self.game_buttons[i - 2][j - 2][
+                                    'bg'] == player1_color and self.game_buttons[i - 3][j - 3]['bg'] == "white" and \
+                                        self.game_buttons[i - 2][j - 3]['bg'] != "white":
+                                    print("botul blocheaza prin alegerea la diagonala principala")
+                                    self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                    for i in range(self.rows):  #a 3 a piesa
+                        for j in range(self.collumns):
+                            if self.game_buttons[i][j]['bg'] == player2_color:
+                                count = 1
+                                if i + 1 < self.rows and i + 2 < self.rows:  # coloana sus
+                                    if self.game_buttons[i + 1][j]['bg'] == player2_color and \
+                                            self.game_buttons[i + 2][j][
+                                                'bg'] == "white":  ## nus sterg nik pan aciic
+                                        count += 2
+                                    if count == 3:
+                                        if self.game_buttons[i - 2][j]['bg'] == "white":
+                                            self.handle_button_click(0, j, player1_color, player2_color,
+                                                                     player1_entry, player2_entry)
+
+                                if j + 1 < self.collumns and j + 2 < self.collumns:  # linie si tre sa fac si de la stanga la dreapta si dreapta la stanga
+                                    if self.game_buttons[i][j + 1]['bg'] == player2_color and \
+                                            self.game_buttons[i][j + 2]['bg'] == "white":
+                                        count += 2
+                                    if count == 3:
+                                        if i + 1 < self.rows :
+                                            if self.game_buttons[i + 1][j + 2]['bg'] != "white":  # la dreapta
+                                                self.handle_button_click(0, j + 2, player1_color, player2_color,
+                                                                         player1_entry, player2_entry)
+                                        if j - 1 > -1 and i + 1 < self.rows:
+                                            if self.game_buttons[i + 1][j - 1]['bg'] != "white":  # la sttanga
+                                                self.handle_button_click(0, j - 1, player1_color, player2_color,
+                                                                         player1_entry, player2_entry)
+
+                                if i - 1 > -1 and j - 1 > -1 and i - 2 < -1 and j - 2 > -1:  # diagonala  principala
+                                    if self.game_buttons[i - 1][j - 1]['bg'] == player2_color:
+                                        count += 2
+                                    if count == 3:
+                                        if self.game_buttons[i - 1][j - 3]['bg'] != "white":  # self.game_buttons[i][j+1]['bg'] != "white" and#
+                                            self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                                     player1_entry,
+                                                                     player2_entry)
+                                if i - 1 > -1 and j + 1 < self.collumns and i - 2 > -1 and j + 2 < self.collumns:  # diagonala secundara
+                                    if self.game_buttons[i - 1][j + 1]['bg'] == player2_color:
+                                        count += 2
+                                    if count == 3:
+                                        if self.game_buttons[i - 1][j + 2]['bg'] != "white":
+                                            self.handle_button_click(0, j + 2, player1_color, player2_color,
+                                                                     player1_entry,
+                                                                     player2_entry)
+                    random_number = random.randint(0, self.collumns - 1)
+                    if self.game_buttons[0][random_number]['bg'] != "white":
+                        random_number = random.randint(0, self.collumns - 1)
+                        while self.game_buttons[0][random_number]['bg'] != "white":
+                            random_number = random.randint(0, self.collumns - 1)
+
+                    print(random_number)
+                    print("mutarea a fost random sa moara copii lu cirian")
+                    current_color = player2_color
+                    self.handle_button_click(0, random_number, player1_color, player2_color, player1_entry,
+                                             player2_entry)
+            if self.current_player == 2 and player2_entry == "Bot_Hard" and winner == 0:
+                print("Bot_HARD")
+
+                for i in range(self.rows): # in caz de botul poate castiga
+                    for j in range(self.collumns):
+                        if  i - 1 > -1:  # in caz de are situatie de win fix deasupra lui gen pe coloana
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i - 1][j]['bg'] == player2_color and self.game_buttons[i - 2][j]['bg'] == player2_color and self.game_buttons[i - 3][j]['bg'] == "white":
+                                print("botul castiga prin alegerea de a plasa deasupra pe coloana")
+                                self.handle_button_click(0, j, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j + 3 < self.collumns: # in caz de are situatie de win pe dreapta si e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1]['bg'] == player2_color and self.game_buttons[i][j + 2]['bg'] == player2_color and self.game_buttons[i][j + 3]['bg'] == "white":
+                                print("botul castiga prin alegerea la dreapta pe linia cea mai dejos")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                        player2_entry)
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j + 1]['bg'] == player2_color and self.game_buttons[i][j + 2]['bg'] == player2_color and self.game_buttons[i][j + 3]['bg'] == "white" and self.game_buttons[i + 1][j + 3]['bg'] != "white":
+                                print("botul castiga prin alegerea la dreapta dar nu e linia de jos")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and self.game_buttons[i][j - 3]['bg'] == "white":
+                                print("botul castiga prin alegerea la stanga dar  e si pee linia de jos")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de win pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i][j - 1]['bg'] == player2_color and self.game_buttons[i][j - 2]['bg'] == player2_color and self.game_buttons[i][j - 3]['bg'] == "white" and self.game_buttons[i + 1][j - 3]['bg'] != "white":
+                                print("botul castiga prin alegerea la dreapta dar nu e linia de jos")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de castiga pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j+1]['bg'] == player2_color and self.game_buttons[i-2][j+2]['bg'] == player2_color and self.game_buttons[i-3][j+3]['bg'] == "white" and  self.game_buttons[i-1][j+2]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala secundara")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 < self.collumns: # in cazz de castiga pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player2_color and self.game_buttons[i-1][j-1]['bg'] == player2_color and self.game_buttons[i-2][j-2]['bg'] == player2_color and self.game_buttons[i-3][j-3]['bg'] == "white" and  self.game_buttons[i-2][j-3]['bg'] != "white":
+                                print("botul castiga prin alegerea la diagonala principala")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                for i in range(self.rows): # in caz de botul poate bloca inamicul sa castigee
+                    for j in range(self.collumns):
+                        if  i - 1 > -1:  # in caz de poate bloca inamicu de a pune 4 pe o coloana
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j]['bg'] == player1_color and self.game_buttons[i - 2][j]['bg'] == player1_color and self.game_buttons[i - 3][j]['bg'] == "white":
+                                print("botul blocheaza prin alegerea de a plasa deasupra pe coloana")
+                                self.handle_button_click(0, j, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j + 3 < self.collumns: # in caz de are situatie de blocaj pe dreapta si e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1]['bg'] == player1_color and self.game_buttons[i][j + 2]['bg'] == player1_color and self.game_buttons[i][j + 3]['bg'] == "white":
+                                print("botul blocheaza prin alegerea la dreapta pe linia cea mai dejos")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                        player2_entry)
+                        if i != self.rows - 1 and j + 3 < self.collumns:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j + 1]['bg'] == player1_color and self.game_buttons[i][j + 2]['bg'] == player1_color and self.game_buttons[i][j + 3]['bg'] == "white" and self.game_buttons[i + 1][j + 3]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i == self.rows - 1 and j - 3 > -1:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == player1_color and self.game_buttons[i][j - 3]['bg'] == "white":
+                                print("botul blocheaza prin alegerea la stanga dar  e si pee linia de jos")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i != self.rows - 1 and j - 3 > -1:  # in caz de are situatie de blocaj pe dreapta si nu e ultima linie gen
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i][j - 1]['bg'] == player1_color and self.game_buttons[i][j - 2]['bg'] == player1_color and self.game_buttons[i][j - 3]['bg'] == "white" and self.game_buttons[i + 1][j - 3]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la dreapta dar nu e linia de jos")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j + 3 < self.collumns: # in cazz de blocaj pe diagonala secundara
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i - 1][j + 1]['bg'] == player1_color and self.game_buttons[i - 2][j + 2]['bg'] == player1_color and \self.game_buttons[i - 3][j + 3]['bg'] == "white" and \self.game_buttons[i - 2][j + 3]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la diagonala secundara")
+                                self.handle_button_click(0, j + 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                        if i - 3 > -1 and j - 3 < self.collumns: # in cazz de blocaj pe diagonala principala
+                            if self.game_buttons[i][j]['bg'] == player1_color and self.game_buttons[i-1][j-1]['bg'] == player1_color and self.game_buttons[i-2][j-2]['bg'] == player1_color and self.game_buttons[i-3][j-3]['bg'] == "white" and  self.game_buttons[i-2][j-3]['bg'] != "white":
+                                print("botul blocheaza prin alegerea la diagonala principala")
+                                self.handle_button_click(0, j - 3, player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+
+
+
+
+
+
+                gasit = 0
+                for i in range(self.rows):  # cazu daca are unde sa l fure pe inamic sa nu castige
+                    for j in range(self.collumns):
+                        print(self.game_buttons[i][j]['bg'], end=" ")
+                    print()
+                for i in range(self.rows):  # cazu daca are unde sa l fure pe inamic sa nu castige
+                    for j in range(self.collumns):
+                        if self.game_buttons[i][j]['bg'] == player2_color:
+                            gasit = 1
+                if gasit == 0: # nu am pus nici o culoare inca
+                    if self.game_buttons[self.rows - 1][(self.collumns - 1) // 2]['bg'] == "white": #daca fix mijlocu e liber pune acolo
+                        self.handle_button_click(0, (self.collumns - 1) // 2, player1_color, player2_color,
+                                                 player1_entry,
+                                                 player2_entry)
+                    else: self.handle_button_click(0, (self.collumns - 1) // 2 + 1, player1_color, player2_color,
+                                                 player1_entry,
+                                                 player2_entry)
+                for i in range(self.rows):  # cam are o piesa pusa, o gaseste si incearca sa o continue
+                    for j in range(self.collumns):
+                        if self.game_buttons[i][j]['bg'] == player2_color:
+                            if j + 1 < self.collumns and self.game_buttons[i][j+1]['bg'] == "white":#in caz ca are piesa o continua pe dreapta
+                                print(f"intru aici pe calea ferata dreapta {i}{j}")
+                                self.handle_button_click(0, j + 1 , player1_color, player2_color,
+                                                         player1_entry,
+                                                         player2_entry)
+                            else:
+                                if i - 1 > -1 and self.game_buttons[i-1][j]['bg'] == "white":#in caz ca are piesa o continua pe sus
+                                    print("pun deasupra un patratell")
+                                    self.handle_button_click(0, j , player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+                                elif j - 1 > -1 and self.game_buttons[i][j-1]['bg'] == "white": #in caz ca are piesa o continua pe stanga
+                                    print("pun in stanga un patratell")
+                                    self.handle_button_click(0, j-1, player1_color, player2_color,
+                                                             player1_entry,
+                                                             player2_entry)
+
+
+
+
+
 
             return
-
         self.wait = 1
         self.game_buttons[initial_row][col]['bg'] = 'white'
 
@@ -513,7 +792,7 @@ class MainFrame(tk.Tk):
         self.game_buttons[row][col]['bg'] = current_color
 
         self.after(delay, lambda: self.animate_button_change(row + 1, col, initial_row, current_color, player1_color,
-                                                             player2_color,  player1_entry, player2_entry))
+                                                             player2_color, player1_entry, player2_entry))
 
     def switch_player_turn(self):
         # Switch turns
@@ -523,14 +802,7 @@ class MainFrame(tk.Tk):
             self.current_player = 1
 
     def player_has_won(self, player1_color, player2_color):
-        # for i in range(self.rows):
-        #     for j in range(self.collumns):
-        #         print(f" {i} {j}", end=" ")
-        #     print()
-        # for i in range(self.rows):
-        #     for j in range(self.collumns):
-        #         print(self.game_buttons[i][j]['bg'], end=' ')
-        #     print()
+
         gasit = 0
         for i in range(self.rows):
             for j in range(self.collumns):
@@ -580,21 +852,78 @@ class MainFrame(tk.Tk):
         else:
             return 0
 
+    def create_game_interface(self, player1_color, player2_color, player1_name, player2_name, rows, columns,
+                              player1_is_checked, player1_entry, player2_entry):
+        game_interface_frame = tk.Frame(self)
+        self.frames["GameInterface"] = game_interface_frame
+        self.rows = rows
+        self.collumns = columns
 
+        # print(f"{player1_color},{player2_color},{player1_name},{player2_name},{rows},{columns},{player1_is_checked},{player1_entry},{player2_entry}")
+
+        if columns < 11 and rows < 9:
+            button_width = 20  # Width in text units
+            button_height = 6  # Height in text units
+            total_button_width = button_width * columns
+            total_button_height = button_height * rows
+
+            padding_width = (self.screen_width // 2) - (total_button_width) - 60 * columns
+            padding_height = (self.screen_height // 2) - (total_button_height) - 40 * rows
+        else:
+            button_width = 15  # Width in text units
+            button_height = 5  # Height in text units
+            total_button_width = button_width * columns
+            total_button_height = button_height * rows
+            padding_width = (self.screen_width // 2) - (total_button_width) - 45 * columns
+            padding_height = (self.screen_height // 2) - (total_button_height) - 30 * rows
+
+
+        # Add padding frames to push the button grid to the center
+        top_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
+        top_padding.grid(row=0, columnspan=columns + 2)
+        left_padding = tk.Frame(game_interface_frame, width=padding_width)
+        left_padding.grid(row=1, column=0, rowspan=rows)
+
+        self.game_buttons = [[None for _ in range(columns)] for _ in range(rows)]
+
+        for i in range(rows):
+            for j in range(columns):
+                button = tk.Button(
+                    game_interface_frame,
+                    bg='white',
+                    width=button_width,
+                    height=button_height,
+                    command=lambda row=i, col=j: self.handle_button_click(row, col, player1_color, player2_color,
+                                                                          player1_entry, player2_entry)
+
+                )
+                # Place buttons in the grid with padding on top and left
+                button.grid(row=i + 1, column=j + 1)
+                button.bind('<Button-1>',
+                            lambda event, r=i, c=j: self.handle_button_click(r, c, player1_color, player2_color,
+                                                                             player1_entry, player2_entry))
+                self.game_buttons[i][j] = button
+
+        right_padding = tk.Frame(game_interface_frame, width=padding_width)
+        right_padding.grid(row=1, column=columns + 1, rowspan=rows)
+        bottom_padding = tk.Frame(game_interface_frame, height=padding_height, width=self.screen_width)
+        bottom_padding.grid(row=rows + 1, columnspan=columns + 2)
+
+        game_interface_frame.pack(expand=True, fill='both')
+
+        return game_interface_frame
 
     def update_player_selection(self):
         player = 1 if self.player_option_var.get() == 1 else 2
-        print(f"{player} selected")
-
-    def player_vs_easyAI(self):
-        player_vs_easyAI = tk.Frame(self)
-        self.frames["PlayerVsEasyBot"] = player_vs_easyAI
+    def player_vs_hardAI(self):
+        player_vs_hardbot = tk.Frame(self)
+        self.frames["PlayerVsHardBot"] = player_vs_hardbot
 
         bg_image_path = r"E:\Python\4InARow\player_vs_bot.png"
         # Simplify the background to a solid color for visibility checking
         bg_image = ImageTk.PhotoImage(Image.open(bg_image_path).resize((self.screen_width, self.screen_height)))
 
-        canvas = tk.Canvas(player_vs_easyAI, width=self.screen_width, height=self.screen_height)
+        canvas = tk.Canvas(player_vs_hardbot, width=self.screen_width, height=self.screen_height)
         canvas.pack(fill="both", expand=True)
 
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
@@ -603,26 +932,8 @@ class MainFrame(tk.Tk):
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
 
-        play_button = tk.Button(
-            player_vs_easyAI,
-            text="Play",
-            image=button_image,
-            font=("Helvetica", 14),
-            compound="center",
-            fg="black",
-            borderwidth=0,
-            relief='flat',
-            highlightthickness=0
-        )
-
-        play_button.image = button_image
-        button_window = canvas.create_window(
-            self.screen_width // 2 + 130, self.screen_height - 305,  # Adjust position as needed
-            window=play_button
-        )
-
         back_button = tk.Button(
-            player_vs_easyAI,
+            player_vs_hardbot,
             text="Back",
             image=button_image,
             font=("Helvetica", 14),
@@ -640,51 +951,74 @@ class MainFrame(tk.Tk):
             window=back_button
         )
 
-        row_select = tk.Spinbox(player_vs_easyAI, from_=6, to=10, wrap=True)
+        row_select = tk.Spinbox(player_vs_hardbot, from_=6, to=10, wrap=True)
         canvas.create_window(1037, 568, window=row_select)
 
-        column_select = tk.Spinbox(player_vs_easyAI, from_=7, to=13, wrap=True)
+        column_select = tk.Spinbox(player_vs_hardbot, from_=7, to=13, wrap=True)
         canvas.create_window(1094, 603, window=column_select)
 
-        player1_entry = tk.Entry(player_vs_easyAI)
+        player1_entry = tk.Entry(player_vs_hardbot)
         player1_entry_window = canvas.create_window(866, 287, window=player1_entry)
 
         # player2_entry = tk.Entry(player_vs_easyAI)
         # player2_entry_window = canvas.create_window(1166, 287, window=player2_entry)
 
         self.player1_radiobutton = ttk.Radiobutton(
-            player_vs_easyAI,
+            player_vs_hardbot,
             variable=self.player_option_var,
-            value=1,  # The value this radiobutton represents
+            value=1,
             command=self.update_player_selection
         )
         canvas.create_window(935, 680, window=self.player1_radiobutton)
 
         self.player2_radiobutton = ttk.Radiobutton(
-            player_vs_easyAI,
+            player_vs_hardbot,
             variable=self.player_option_var,
-            value=2,  # The value this radiobutton represents
+            value=2,
             command=self.update_player_selection
         )
         canvas.create_window(1180, 680, window=self.player2_radiobutton)
 
-        color_player_1 = tk.Button(player_vs_easyAI, text="    ", bg="white",
+        color_player_1 = tk.Button(player_vs_hardbot, text="    ", bg="white",
                                    command=lambda: self.choose_color(color_player_1))
         button_window = canvas.create_window(805, 260, window=color_player_1)  # Position the button at (100, 100)
 
-        color_player_2 = tk.Button(player_vs_easyAI, text="    ", bg="white",
+        color_player_2 = tk.Button(player_vs_hardbot, text="    ", bg="white",
                                    command=lambda: self.choose_color(color_player_2))
         button_window = canvas.create_window(1105, 260, window=color_player_2)  # Position the button at (100, 100)
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
+        player2_entry = "Bot_Hard"
+        play_button = tk.Button(
+            player_vs_hardbot,
+            text="Play",
+            image=button_image,
+            font=("Helvetica", 14),
+            compound="center",
+            fg="black",
+            borderwidth=0,
+            relief='flat',
+            highlightthickness=0,
+            command=lambda: self.start_game(
+                color_player_1.cget('bg'), color_player_2.cget('bg'),
+                player1_entry.get(), player2_entry,
+                int(row_select.get()), int(column_select.get()),
+                self.player_option_var.get(), player1_entry.get(), player2_entry
+            )
+        )
 
-        player_vs_easyAI.pack_forget()
+        play_button.image = button_image
+        button_window = canvas.create_window(
+            self.screen_width // 2 + 130, self.screen_height - 305,  # Adjust position as needed
+            window=play_button
+        )
 
-        self.add_exit_button(player_vs_easyAI, canvas)
+        player_vs_hardbot.pack_forget()
 
-        return player_vs_easyAI
+        self.add_exit_button(player_vs_hardbot, canvas)
 
+        return player_vs_hardbot
     def player_vs_mediumAI(self):
         player_vs_mediumbot = tk.Frame(self)
         self.frames["PlayerVsMediumBot"] = player_vs_mediumbot
@@ -702,6 +1036,8 @@ class MainFrame(tk.Tk):
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
 
+        player2_entry = "Bot_Medium"
+
         play_button = tk.Button(
             player_vs_mediumbot,
             text="Play",
@@ -711,7 +1047,13 @@ class MainFrame(tk.Tk):
             fg="black",
             borderwidth=0,
             relief='flat',
-            highlightthickness=0
+            highlightthickness=0,
+            command=lambda: self.start_game(
+                color_player_1.cget('bg'), color_player_2.cget('bg'),
+                player1_entry.get(), player2_entry,
+                int(row_select.get()), int(column_select.get()),
+                self.player_option_var.get(), player1_entry.get(), player2_entry
+            )
         )
 
         play_button.image = button_image
@@ -784,15 +1126,15 @@ class MainFrame(tk.Tk):
 
         return player_vs_mediumbot
 
-    def player_vs_hardAI(self):
-        player_vs_hardbot = tk.Frame(self)
-        self.frames["PlayerVsHardBot"] = player_vs_hardbot
+    def player_vs_easyAI(self):
+        player_vs_easyAI = tk.Frame(self)
+        self.frames["PlayerVsEasyBot"] = player_vs_easyAI
 
         bg_image_path = r"E:\Python\4InARow\player_vs_bot.png"
-        # Simplify the background to a solid color for visibility checking
+
         bg_image = ImageTk.PhotoImage(Image.open(bg_image_path).resize((self.screen_width, self.screen_height)))
 
-        canvas = tk.Canvas(player_vs_hardbot, width=self.screen_width, height=self.screen_height)
+        canvas = tk.Canvas(player_vs_easyAI, width=self.screen_width, height=self.screen_height)
         canvas.pack(fill="both", expand=True)
 
         canvas.create_image(0, 0, image=bg_image, anchor="nw")
@@ -801,26 +1143,8 @@ class MainFrame(tk.Tk):
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
 
-        play_button = tk.Button(
-            player_vs_hardbot,
-            text="Play",
-            image=button_image,
-            font=("Helvetica", 14),
-            compound="center",
-            fg="black",
-            borderwidth=0,
-            relief='flat',
-            highlightthickness=0
-        )
-
-        play_button.image = button_image
-        button_window = canvas.create_window(
-            self.screen_width // 2 + 130, self.screen_height - 305,  # Adjust position as needed
-            window=play_button
-        )
-
         back_button = tk.Button(
-            player_vs_hardbot,
+            player_vs_easyAI,
             text="Back",
             image=button_image,
             font=("Helvetica", 14),
@@ -838,53 +1162,82 @@ class MainFrame(tk.Tk):
             window=back_button
         )
 
-        row_select = tk.Spinbox(player_vs_hardbot, from_=6, to=10, wrap=True)
+        row_select = tk.Spinbox(player_vs_easyAI, from_=6, to=10, wrap=True)
         canvas.create_window(1037, 568, window=row_select)
 
-        column_select = tk.Spinbox(player_vs_hardbot, from_=7, to=13, wrap=True)
+        column_select = tk.Spinbox(player_vs_easyAI, from_=7, to=13, wrap=True)
         canvas.create_window(1094, 603, window=column_select)
 
-        player1_entry = tk.Entry(player_vs_hardbot)
+        player1_entry = tk.Entry(player_vs_easyAI)
         player1_entry_window = canvas.create_window(866, 287, window=player1_entry)
 
         # player2_entry = tk.Entry(player_vs_easyAI)
         # player2_entry_window = canvas.create_window(1166, 287, window=player2_entry)
 
         self.player1_radiobutton = ttk.Radiobutton(
-            player_vs_hardbot,
+            player_vs_easyAI,
             variable=self.player_option_var,
-            value=1,
+            value=1,  # The value this radiobutton represents
             command=self.update_player_selection
         )
         canvas.create_window(935, 680, window=self.player1_radiobutton)
 
         self.player2_radiobutton = ttk.Radiobutton(
-            player_vs_hardbot,
+            player_vs_easyAI,
             variable=self.player_option_var,
-            value=2,
+            value=2,  # The value this radiobutton represents
             command=self.update_player_selection
         )
         canvas.create_window(1180, 680, window=self.player2_radiobutton)
 
-        color_player_1 = tk.Button(player_vs_hardbot, text="    ", bg="white",
+        color_player_1 = tk.Button(player_vs_easyAI, text="    ", bg="white",
                                    command=lambda: self.choose_color(color_player_1))
         button_window = canvas.create_window(805, 260, window=color_player_1)  # Position the button at (100, 100)
 
-        color_player_2 = tk.Button(player_vs_hardbot, text="    ", bg="white",
+        color_player_2 = tk.Button(player_vs_easyAI, text="    ", bg="white",
                                    command=lambda: self.choose_color(color_player_2))
         button_window = canvas.create_window(1105, 260, window=color_player_2)  # Position the button at (100, 100)
 
         button_image_path = r"E:\Python\4InARow\chatframe.png"
         button_image = ImageTk.PhotoImage(Image.open(button_image_path).resize((190, 50)))
 
-        player_vs_hardbot.pack_forget()
+        player_vs_easyAI.pack_forget()
 
-        self.add_exit_button(player_vs_hardbot, canvas)
+        player2_entry = "Bot_Easy"
 
-        return player_vs_hardbot
+        play_button = tk.Button(
+            player_vs_easyAI,
+            text="Play",
+            image=button_image,
+            font=("Helvetica", 14),
+            compound="center",
+            fg="black",
+            borderwidth=0,
+            relief='flat',
+            highlightthickness=0,
+            command=lambda: self.start_game(
+                color_player_1.cget('bg'), color_player_2.cget('bg'),
+                player1_entry.get(), player2_entry,
+                int(row_select.get()), int(column_select.get()),
+                self.player_option_var.get(), player1_entry.get(), player2_entry
+            )
+        )
+
+        play_button.image = button_image
+        button_window = canvas.create_window(
+            self.screen_width // 2 + 130, self.screen_height - 305,  # Adjust position as needed
+            window=play_button
+        )
+
+        self.add_exit_button(player_vs_easyAI, canvas)
+
+        return player_vs_easyAI
+
+
+
+
 
     def show_frame(self, name):
-        print(f"Attempting to show frame: {name}")  # Debug statement
         frame = self.frames[name]
         # Hide all frames first
         for f in self.frames.values():
@@ -892,7 +1245,6 @@ class MainFrame(tk.Tk):
         # Show the desired frame
         frame.pack(fill="both", expand=True)
         frame.tkraise()
-        print(f"{name} should now be visible.")
 
     def choose_color(self, button):
         color = colorchooser.askcolor(title="Choose a color")
